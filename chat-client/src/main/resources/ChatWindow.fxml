@@ -41,7 +41,7 @@
                     <Insets left="6.0" right="6.0"/>
                 </HBox.margin>
             </TextArea>
-            <ListView fx:id="contacts" prefWidth="150.0" onMouseClicked="#getName">
+            <ListView fx:id="contacts" prefWidth="150.0">
                 <HBox.margin>
                     <Insets left="6.0" right="6.0"/>
                 </HBox.margin>

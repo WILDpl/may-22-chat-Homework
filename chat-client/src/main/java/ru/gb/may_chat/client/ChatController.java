@@ -55,6 +55,7 @@ public class ChatController implements Initializable {
         }
 
         chatArea.appendText(text + System.lineSeparator());
+
         inputField.clear();
     }
 
