@@ -42,19 +42,20 @@ public class ChatController implements Initializable {
 
     public void sendMessage(ActionEvent actionEvent) {
         String text = inputField.getText();
+        String getName = contacts.getSelectionModel().getSelectedItem();
 
         if (text == null || text.isBlank()) {
             return;
         }
 
-        if (contacts.getSelectionModel().getSelectedIndices().isEmpty()) {
+        if (contacts.getSelectionModel().getSelectedIndices().isEmpty() || contacts.getSelectionModel().getSelectedIndices().contains(0)) {
             chatArea.appendText("Broadcast: " + text);
+        } else {
+            chatArea.appendText(getName + ": " + text);
         }
 
         chatArea.appendText(text + System.lineSeparator());
-
         inputField.clear();
-        contacts.getSelectionModel().select(-1);
     }
 
     @Override
@@ -63,17 +64,4 @@ public class ChatController implements Initializable {
         contacts.setItems(FXCollections.observableList(names));
     }
 
-    public void getName(MouseEvent mouseEvent) {
-        String text = inputField.getText();
-        String getName = contacts.getSelectionModel().getSelectedItem();
-
-        if (contacts.getSelectionModel().getSelectedIndices().isEmpty() || contacts.getSelectionModel().getSelectedIndices().contains(0)) {
-            chatArea.appendText("Broadcast: " + text);
-        } else {
-            chatArea.appendText(getName + ": " + text);
-        }
-
-//        String getName = contacts.getSelectionModel().getSelectedItem();
-//        inputField.setText(getName + ": ");
-    }
 }
