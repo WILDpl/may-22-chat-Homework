@@ -3,8 +3,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-
 <?import javafx.geometry.Insets?>
+
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/15" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="ru.gb.may_chat.client.ChatController">
     <VBox fx:id="mainPanel" visible="true">
@@ -16,22 +16,13 @@
                 <MenuItem text="Exit" onAction="#closeApplication"/>
             </Menu>
             <Menu text="Edit">
-                <MenuItem text="Open" onAction="#mockAction"/>
-                <MenuItem text="Connect" onAction="#mockAction"/>
-                <MenuItem text="Something" onAction="#mockAction"/>
-                <MenuItem text="Exit" onAction="#mockAction"/>
+                <MenuItem text="Edit" onAction="#mockAction"/>
             </Menu>
             <Menu text="View">
-                <MenuItem text="Open" onAction="#mockAction"/>
-                <MenuItem text="Connect" onAction="#mockAction"/>
-                <MenuItem text="Something" onAction="#mockAction"/>
-                <MenuItem text="Exit" onAction="#mockAction"/>
+                <MenuItem text="View" onAction="#mockAction"/>
             </Menu>
             <Menu text="Help">
-                <MenuItem text="Open" onAction="#mockAction"/>
-                <MenuItem text="Connect" onAction="#mockAction"/>
-                <MenuItem text="Something" onAction="#mockAction"/>
-                <MenuItem text="Exit" onAction="#mockAction"/>
+                <MenuItem text="Help" onAction="#helpAction"/>
             </Menu>
         </MenuBar>
 
