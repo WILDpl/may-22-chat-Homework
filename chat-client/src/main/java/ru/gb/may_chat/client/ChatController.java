@@ -1,15 +1,17 @@
 package ru.gb.may_chat.client;
 
+import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.*;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
+import javafx.fxml.*;
+import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.text.*;
+import javafx.stage.*;
 
 import javax.swing.plaf.*;
 import java.net.URL;
@@ -64,5 +66,13 @@ public class ChatController implements Initializable {
         List<String> names = List.of("Send ALL", "Vasya", "Masha", "Petya", "Valera", "Nastya");
         contacts.setItems(FXCollections.observableList(names));
     }
+
+    public void helpAction(ActionEvent actionEvent) throws Exception  {
+        HelpWindow.newWindow();
+    }
+
+
+
+
 
 }
