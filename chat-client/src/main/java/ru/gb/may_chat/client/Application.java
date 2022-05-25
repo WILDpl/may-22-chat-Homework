@@ -17,8 +17,8 @@ public class Application extends javafx.application.Application {
         loader.setLocation(this.getClass().getResource("/ChatWindow.fxml"));
         Parent parent = loader.load();
         Scene scene = new Scene(parent);
-        primaryStage.setTitle("Chat");
         primaryStage.setScene(scene);
+        primaryStage.setTitle("May chat");
         primaryStage.show();
     }
 }
