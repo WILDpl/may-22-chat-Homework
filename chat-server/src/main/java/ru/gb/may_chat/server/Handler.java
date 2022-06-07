@@ -2,17 +2,18 @@ package ru.gb.may_chat.server;
 
 import ru.gb.may_chat.constants.MessageConstants;
 import ru.gb.may_chat.enums.Command;
-import ru.gb.may_chat.server.error.WrongCredentialsException;
+import ru.gb.may_chat.server.error.*;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
+import java.net.*;
 
 import static ru.gb.may_chat.constants.MessageConstants.REGEX;
 import static ru.gb.may_chat.enums.Command.AUTH_MESSAGE;
 import static ru.gb.may_chat.enums.Command.AUTH_OK;
 import static ru.gb.may_chat.enums.Command.BROADCAST_MESSAGE;
+import static ru.gb.may_chat.enums.Command.CHANGE_NICK_OK;
 import static ru.gb.may_chat.enums.Command.ERROR_MESSAGE;
 import static ru.gb.may_chat.enums.Command.PRIVATE_MESSAGE;
 
@@ -38,6 +39,7 @@ public class Handler {
 
     public void handle() {
         handlerThread = new Thread(() -> {
+//            System.out.println("---- " + socket);
             authorize();
             System.out.println("Auth done");
             while (!Thread.currentThread().isInterrupted() && !socket.isClosed()) {
@@ -60,8 +62,20 @@ public class Handler {
 
         switch (command) {
             case BROADCAST_MESSAGE -> server.broadcast(user, split[1]);
-            case PRIVATE_MESSAGE -> server.sendPrivateMessage(user, split[1], split[2]); // добавил приватное сообщение
+            case PRIVATE_MESSAGE -> server.privateMessage(user, split[1], split[2]);
+            case CHANGE_NICK -> changeNick(split[1]);
             default -> System.out.println("Unknown message " + message);
+        }
+    }
+
+    private void changeNick(String newNick) {
+        try {
+            server.getUserService().changeNick(user, newNick);
+            user = newNick;
+            server.updateHandlerUsername();
+            send(CHANGE_NICK_OK.getCommand() + REGEX + newNick);
+        } catch (NickAlreadyIsBusyException e) {
+            send(ERROR_MESSAGE.getCommand() + REGEX + "This nickname already in use");
         }
     }
 
@@ -78,16 +92,20 @@ public class Handler {
 
                     try {
                         nickname = server.getUserService().authenticate(parsed[1], parsed[2]);
+                        socket.setSoTimeout(0); // если попытка авторизации успешна, то тайм-аут бесконечен
+                        System.out.printf("Auth - ok: [%d]\n", socket.getSoTimeout());
                     } catch (WrongCredentialsException e) {
                         response = ERROR_MESSAGE.getCommand() + REGEX + e.getMessage();
                         System.out.println("Wrong credentials: " + parsed[1]);
+                        socket.setSoTimeout(120_000); // если авторизация не успешна, то запускается тайм-аут отключения
+                        System.out.printf("Auth - failed: [%d] ms timeout before the socket is closed\n", socket.getSoTimeout());
                     }
-                    
+
                     if (server.isUserAlreadyOnline(nickname)) {
                         response = ERROR_MESSAGE.getCommand() + REGEX + "This client already connected";
                         System.out.println("Already connected");
                     }
-                    
+
                     if (!response.equals("")) {
                         send(response);
                     } else {
@@ -99,6 +117,8 @@ public class Handler {
                     }
                 }
             }
+        } catch (SocketTimeoutException e) {
+            System.out.println("Connection with unauthorized user closed");
         } catch (IOException e) {
             e.printStackTrace();
         }

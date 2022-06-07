@@ -1,5 +1,6 @@
 package ru.gb.may_chat.server;
 
+import ru.gb.may_chat.props.PropertyReader;
 import ru.gb.may_chat.server.service.UserService;
 
 import java.io.IOException;
@@ -10,10 +11,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static ru.gb.may_chat.constants.MessageConstants.REGEX;
-import static ru.gb.may_chat.enums.Command.*;
+import static ru.gb.may_chat.enums.Command.BROADCAST_MESSAGE;
+import static ru.gb.may_chat.enums.Command.LIST_USERS;
+import static ru.gb.may_chat.enums.Command.PRIVATE_MESSAGE;
 
 public class Server {
-    private static final int PORT = 8189;
+    private final int port;
     private List<Handler> handlers;
 
     private UserService userService;
@@ -21,10 +24,11 @@ public class Server {
     public Server(UserService userService) {
         this.userService = userService;
         this.handlers = new ArrayList<>();
+        port = PropertyReader.getInstance().getPort();
     }
 
     public void start() {
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server start!");
             userService.start();
             while (true) {
@@ -48,10 +52,19 @@ public class Server {
         }
     }
 
+    public void privateMessage(String from, String to, String message) {
+        String msg = PRIVATE_MESSAGE.getCommand() + REGEX + String.format("[%s][to %s]: %s", from, to, message);
+        for (Handler handler : handlers) {
+            if (handler.getUser().equals(from) || handler.getUser().equals(to)) {
+                handler.send(msg);
+            }
+        }
+    }
+
     public UserService getUserService() {
         return userService;
     }
-
+    
     public synchronized boolean isUserAlreadyOnline(String nick) {
         for (Handler handler : handlers) {
             if (handler.getUser().equals(nick)) {
@@ -60,7 +73,7 @@ public class Server {
         }
         return false;
     }
-
+    
     public synchronized void addHandler(Handler handler) {
         this.handlers.add(handler);
         sendContacts();
@@ -71,29 +84,22 @@ public class Server {
         sendContacts();
     }
 
+    public synchronized void updateHandlerUsername() {
+        sendContacts();
+    }
+
     private void shutdown() {
         userService.stop();
     }
 
     private void sendContacts() {
-        String contacts = handlers.stream()
+       String contacts = handlers.stream()
                 .map(Handler::getUser)
                 .collect(Collectors.joining(REGEX));
-        String msg = LIST_USERS.getCommand() + REGEX + contacts;
+       String msg = LIST_USERS.getCommand() + REGEX + contacts;
 
         for (Handler handler : handlers) {
             handler.send(msg);
-        }
-    }
-
-    // добавил метод приватного сообщения
-    public void sendPrivateMessage(String from, String to, String message) {
-        String msg = PRIVATE_MESSAGE.getCommand() + REGEX + String.format("[%s]: %s, %s", from, to, message);
-//        System.out.println(msg);
-        for (Handler handler : handlers) {
-            if (handler.getUser().equals(to)) {
-                handler.send(msg);
-            }
         }
     }
 }
