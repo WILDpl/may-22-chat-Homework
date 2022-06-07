@@ -26,10 +26,14 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import static ru.gb.may_chat.constants.MessageConstants.REGEX;
-import static ru.gb.may_chat.enums.Command.*;
+import static ru.gb.may_chat.enums.Command.AUTH_MESSAGE;
+import static ru.gb.may_chat.enums.Command.BROADCAST_MESSAGE;
+import static ru.gb.may_chat.enums.Command.CHANGE_NICK;
+import static ru.gb.may_chat.enums.Command.PRIVATE_MESSAGE;
 
 public class ChatController implements Initializable, MessageProcessor {
 
+    private static final String BROADCAST_CONTACT = "ALL";
     @FXML
     private VBox changeNickPanel;
 
@@ -76,7 +80,7 @@ public class ChatController implements Initializable, MessageProcessor {
         System.out.println("mock");
     }
 
-    public void closeApplication(ActionEvent actionEvent) {
+    public void closeApplication(ActionEvent actionEvent) throws IOException {
         Platform.exit();
     }
 
@@ -87,9 +91,9 @@ public class ChatController implements Initializable, MessageProcessor {
                 return;
             }
             String recipient = contacts.getSelectionModel().getSelectedItem();
-            if (recipient == null || recipient.equals("ALL")) { // добавил условие: если никто не выбран в списке контактов
+            if (recipient.equals(BROADCAST_CONTACT)) {
                 networkService.sendMessage(BROADCAST_MESSAGE.getCommand() + REGEX + text);
-            } else {    // иначе, если приватное сообщение выбранному пользователю
+            } else {
                 networkService.sendMessage(PRIVATE_MESSAGE.getCommand() + REGEX + recipient + REGEX + text);
             }
             inputField.clear();
@@ -126,14 +130,21 @@ public class ChatController implements Initializable, MessageProcessor {
             case AUTH_OK -> authOk(split);
             case ERROR_MESSAGE -> showError(split[1]);
             case LIST_USERS -> parseUsers(split);
+            case CHANGE_NICK_OK -> handleChangeNick(split[1]);
             default -> chatArea.appendText(split[1] + System.lineSeparator());
         }
     }
 
+    private void handleChangeNick(String newNick) {
+        user = newNick;
+        returnToChat(null);
+    }
+
     private void parseUsers(String[] split) {
         List<String> contact = new ArrayList<>(Arrays.asList(split));
-        contact.set(0, "ALL");
+        contact.set(0, BROADCAST_CONTACT);
         contacts.setItems(FXCollections.observableList(contact));
+        contacts.getSelectionModel().selectFirst();
     }
 
     private void authOk(String[] split) {
@@ -144,11 +155,22 @@ public class ChatController implements Initializable, MessageProcessor {
     }
 
     public void sendChangeNick(ActionEvent actionEvent) {
-//TODO
+        String newNick = newNickField.getText();
+
+        if (newNick.isBlank()) {
+            return;
+        }
+        try {
+            networkService.sendMessage(CHANGE_NICK.getCommand() + REGEX + newNick);
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError("Network error");
+        }
     }
 
     public void returnToChat(ActionEvent actionEvent) {
-//TODO
+         mainPanel.setVisible(true);
+         changeNickPanel.setVisible(false);
     }
 
     public void sendChangePass(ActionEvent actionEvent) {
@@ -166,9 +188,15 @@ public class ChatController implements Initializable, MessageProcessor {
             if (!networkService.isConnected()) {
                 networkService.connect();
             }
+
             networkService.sendMessage(msg);
         } catch (IOException e) {
             showError("Network error");
         }
+    }
+
+    public void showChangeNickPanel(ActionEvent actionEvent) {
+        changeNickPanel.setVisible(true);
+        mainPanel.setVisible(false);
     }
 }
